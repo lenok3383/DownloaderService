@@ -2,6 +2,7 @@ import urllib2
 import os
 import threading
 import logging
+from logging import handlers
 
 import sqlalchemy
 import sqlalchemy.exc
@@ -39,7 +40,7 @@ class DownloaderService(threading.Thread):
 
     DOWNLOAD_COMPLITE = 'download complete'
     CAN_NOT_DOWNLOAD = 'cannt download'
-    FILE_ERROR = 'IOError'
+    FILE_ERROR = 'error with file'
     IN_PROGRESS = 'download in progress'
     _cache = {}
 
@@ -102,7 +103,7 @@ class DownloaderService(threading.Thread):
 
     def file_download(self):
         try:
-            self.connect_to_thread_db = WorkWithDB()
+            connect_to_thread_db = WorkWithDB()
             self.log.info('Start download')
             downloaded_file_size = 0
             block_sz = 8192
@@ -132,21 +133,20 @@ class DownloaderService(threading.Thread):
                     self.log.info('Can not download file')
                     self.log.info(' ')
                     self.download_status = self.CAN_NOT_DOWNLOAD
-                else:
-                    self.download_status = self.IN_PROGRESS
-                # update url download status in database
-                self.connect_to_thread_db.update_url_status(self.new_id, self.download_status)
+            # update url download status in database
+            connect_to_thread_db.update_url_status(self.new_id, self.download_status)
 
-        except sqlalchemy.exc.IntegrityError:
+        except sqlalchemy.exc.SQLAlchemyError:
             self.log.info('DBError')
-        except IOError:
-            self.log.info('IOError')
+        except (IOError, urllib2.HTTPError) as e:
+            self.log.info('Error with file')
+            self.log.info(e)
             status = self.FILE_ERROR
-            self.connect_to_thread_db.update_url_status(self.new_id, status)
+            connect_to_thread_db.update_url_status(self.new_id, status)
         except Exception as e:
             status = e
             self.log.info(status)
-            self.connect_to_thread_db.update_url_status(self.new_id, status)
+            connect_to_thread_db.update_url_status(self.new_id, status)
             print e
         finally:
             self.open_file.close()
@@ -187,7 +187,7 @@ class WorkWithDB(object):
 
 def get_logger():
     formatter = logging.Formatter(fmt=LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-    file_handler = logging.handlers.RotatingFileHandler(
+    file_handler = handlers.RotatingFileHandler(
         LOG_FILE,
         maxBytes=LOG_MAX_SIZE,
         backupCount=LOG_BACKUPS)
