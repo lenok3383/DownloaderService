@@ -1,24 +1,21 @@
-import logging
-import socket
-import sys
 import os
-from thread import *
+import sys
+import socket
+import thread
+import logging
 from logging import handlers
 
-from fileDownloader.downloader import DownloaderService
-from fileDownloader.downloader import HTTPException
-from fileDownloader.downloader import URLException
-from fileDownloader.downloader import NoContentLengthException
-from fileDownloader.downloader import CanntCreateFileError
-from fileDownloader.downloader import SomeAnotherError
-from fileDownloader.downloader import DBError
+import sqlalchemy
+import sqlalchemy.orm
+import sqlalchemy_declarative
+
+import fileDownloader.download_exception
 from daemon import Daemon
+from fileDownloader.downloader import DownloaderService
 from sender.sender import receive_answer
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy_declarative import Base, DownStorage
-engine = create_engine('sqlite:///downloads_storage.db')
+
+engine = sqlalchemy.create_engine('sqlite:///downloads_storage.db')
 
 HOST = ''   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
@@ -62,7 +59,7 @@ class SimpleServer(object):
         while True:
             conn, addr = self.sock.accept()
             self.log.info('Connected with ' + addr[0] + ':' + str(addr[1]))
-            start_new_thread(self._clientthread ,(conn,))
+            thread.start_new_thread(self._clientthread ,(conn,))
         self.sock.close()
  
     def _clientthread(self, conn):
@@ -96,19 +93,19 @@ class SimpleServer(object):
             answer = False
             self.log.info('START DOWNLOAD')
             self.download_file()
-        except HTTPException:
+        except fileDownloader.download_exception.HTTPException:
             answer = False
             self.log.info('HTTP exception')
-        except URLException:
+        except fileDownloader.download_exception.URLException:
             answer = False
             self.log.info('URL exception')
-        except NoContentLengthException:
+        except fileDownloader.download_exception.NoContentLengthException:
             answer = False
             self.log.info('Content-length exception')
-        except CanntCreateFileError:
+        except fileDownloader.download_exception.CanntCreateFileError:
             answer = False
             self.log.info('Cann\'t create file error')
-        except DBError:
+        except fileDownloader.download_exception.DBError:
             answer = False
             self.log.info('Problem with database')
         except:
@@ -132,9 +129,9 @@ class SimpleServer(object):
         pass
 
     def delete_downloading_file(self, id_to_remove):
-        DBSession = sessionmaker(bind=engine)
+        DBSession = sqlalchemy.orm.sessionmaker(bind=engine)
         session = DBSession()
-        session.query(DownStorage).filter_by(id = id_to_remove).delete()
+        session.query(sqlalchemy_declarative.DownStorage).filter_by(id = id_to_remove).delete()
         session.commit()
         # for t in THREADS:
         #     t.kill_received = True
