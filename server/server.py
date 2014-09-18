@@ -71,14 +71,19 @@ class SimpleServer(object):
             msg = receive_answer(conn)
             self.log.info('AFTER TRY')
             self.log.info(msg)
-            answer = self.message_handler(msg)
+            answer = self.performance_messages_request(msg)
             conn.close()
         except Exception:
             self.log.info('Exception in processing request')
             import traceback
             print traceback.format_exc()
 
-    def message_handler(self, msg):
+    def performance_messages_request(self, msg):
+        """
+        Decode message,
+        run appropriate function and
+        get answer from request handler
+        """
         if msg['command'] == ADD_URL:
             url = msg['url']
             self.put_url_to_download_queue(url)
