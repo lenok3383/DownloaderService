@@ -17,12 +17,15 @@ from sender.sender import receive_answer
 
 engine = sqlalchemy.create_engine('sqlite:///downloads_storage.db')
 
+
 HOST = ''   # Symbolic name meaning all available interfaces
 PORT = 8888 # Arbitrary non-privileged port
 
-FILE_DIR = os.getcwd()
 
+FILE_DIR = os.getcwd()
 DOWNLOAD_DIR =  os.path.join(FILE_DIR, 'server/', 'fileDownloader/' , 'downloads/')
+PID_FILE = os.path.join(FILE_DIR, 'server/', 'daemon-example.pid')
+
 
 LOG_FILE =  os.path.join(FILE_DIR, 'server/', 'daemon.log')
 LOG_FORMAT = '%(levelname)s:%(name)s: %(message)s (%(asctime)s; %(filename)s:%(lineno)d)'
@@ -36,15 +39,14 @@ LOG_LEVELS = {
     'ERROR': logging.ERROR,
     'CRITICAL': logging.CRITICAL}
 
-PID_FILE = os.path.join(FILE_DIR, 'server/', 'daemon-example.pid')
 
 ADD_URL = 'add_url'
 STATUS = 'status'
 DEL_FILE = 'delete_file'
 THREADS = []
 
-class SimpleServer(object):
 
+class SimpleServer(object):
 
     def __init__(self):
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -124,7 +126,6 @@ class SimpleServer(object):
         self.log.info('In progress')
         self.log.info('          ')
 
-
     def get_download_status(self):
         pass
 
@@ -147,6 +148,7 @@ class MyDaemon(Daemon):
         except socket.error , msg:
             log.error('Bind failed. Error Code : ' + str(msg[0]) + ' Message ' + msg[1])
             sys.exit()  
+
 
 def get_logger():
     formatter = logging.Formatter(fmt=LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
