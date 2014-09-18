@@ -1,29 +1,22 @@
 import urllib2
 import os
-from download_exception import HTTPException
-from download_exception import URLException
-from download_exception import NoContentLengthException
-from download_exception import CanntCreateFileError
-from download_exception import SomeAnotherError
-from download_exception import DBError
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm import scoped_session
-from sqlalchemy_declarative import Base
-from sqlalchemy_declarative import DownStorage
-from sqlalchemy import update
-from urllib2 import URLError
-from urllib2 import HTTPError
 import threading
-import sqlalchemy.exc
 import logging
-from logging import handlers
+
+import sqlalchemy
+import sqlalchemy.exc
+import sqlalchemy.orm
+import sqlalchemy_declarative
+
+from sqlalchemy_declarative import DownStorage as downloads_table
+
+import download_exception
+
 
 FILE_DIR = os.getcwd()
-DOWNLOAD_DIR =  os.path.join(FILE_DIR, 'server/', 'fileDownloader/' ,
-                             'downloads/','test.txt')
-engine = create_engine('sqlite:///downloads_storage.db')
-Base.metadata.bind = engine
+DOWNLOAD_DIR =  os.path.join(FILE_DIR, 'server', 'fileDownloader', 'downloads', 'test.txt')
+engine = sqlalchemy.create_engine('sqlite:///downloads_storage.db')
+sqlalchemy_declarative.Base.metadata.bind = engine
 FILE_DIR = os.getcwd()
 
 LOG_FILE =  os.path.join(FILE_DIR, 'server/', 'fileDownloader/', 'downloader.log')
@@ -68,15 +61,15 @@ class DownloaderService(threading.Thread):
             meta = self.open_url.info()
             self.log.info('Get file size')
             file_size = int(meta.getheaders("Content-Length")[0])
-        except HTTPError:
+        except urllib2.HTTPError:
             self.log.info('HTTPError')
-            raise HTTPException
-        except URLError:
+            raise download_exception.HTTPException
+        except urllib2.URLError:
             self.log.info('URLError')
-            raise URLException
+            raise download_exception.URLException
         except:
             self.log.info('Content - length exception')
-            raise NoContentLengthException
+            raise download_exception.NoContentLengthException
         return file_size
 
     def create_file(self):
@@ -87,11 +80,11 @@ class DownloaderService(threading.Thread):
                                                self.file_name), 'wb')
         except IOError:
             self.log.info('IOError')
-            raise CanntCreateFileError
+            raise download_exception.CanntCreateFileError
         except Exception as e:
             self.log.info('Can not create new file. Some another error')
             self.log.info(e)
-            raise SomeAnotherError
+            raise download_exception.SomeAnotherError
 
     def add_new_record_to_db(self):
         try:
@@ -101,7 +94,7 @@ class DownloaderService(threading.Thread):
             new_id = connect_to_db.put_new_url_to_db(self.url)
         except sqlalchemy.exc.IntegrityError:
             self.log.info('DBError')
-            raise DBError
+            raise download_exception.DBError
         return new_id
 
     def file_download(self):
@@ -161,12 +154,12 @@ class WorkWithDB(object):
         self.session = self.session_maker()
 
     def session_maker(self):
-        DBSession = sessionmaker(bind=engine)
-        session = DBSession()
+        DBSession = sqlalchemy.orm.sessionmaker(bind=engine)
+        session = DBSession() 
         return session
 
     def put_new_url_to_db(self, url):
-        new_url = DownStorage(url=url, status=self.START_DOWNLOAD)
+        new_url = sqlalchemy_declarative.DownStorage(url=url, status=self.START_DOWNLOAD)
         self.session.add(new_url)
         self.session.commit()
         self.session.refresh(new_url)
@@ -174,14 +167,14 @@ class WorkWithDB(object):
         return self.new_id
 
     def update_url_status(self, url_id, status_value):
-        stmt = update(DownStorage).where(DownStorage.id == url_id)\
-            .values(status=status_value)
+        stmt = sqlalchemy.update(downloads_table).where(downloads_table.id == url_id).\
+               values(status=status_value)
         self.session.execute(stmt)
         self.session.commit()
 
 def get_logger():
     formatter = logging.Formatter(fmt=LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-    file_handler = handlers.RotatingFileHandler(
+    file_handler = logging.handlers.RotatingFileHandler(
         LOG_FILE,
         maxBytes=LOG_MAX_SIZE,
         backupCount=LOG_BACKUPS)
