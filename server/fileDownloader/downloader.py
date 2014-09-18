@@ -139,10 +139,13 @@ class DownloaderService(threading.Thread):
             connect_to_thread_db.update_url_status(self.new_id, self.download_status)
 
         except sqlalchemy.exc.SQLAlchemyError as e:
+            error_description = e
             self.log.info('DBError')
+            self.log.info(error_description)
         except (IOError, urllib2.HTTPError) as e:
+            error_description = e
             self.log.info('Error with file')
-            self.log.info(e)
+            self.log.info(error_description)
             status = self.FILE_ERROR
             connect_to_thread_db.update_url_status(self.new_id, status)
         except Exception as e:
