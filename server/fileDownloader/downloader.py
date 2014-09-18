@@ -103,11 +103,6 @@ class DownloaderService(threading.Thread):
     def file_download(self):
         try:
             self.connect_to_thread_db = WorkWithDB()
-        except sqlalchemy.exc.IntegrityError:
-            self.log.info('DBError')
-            raise download_exception.DBError
-
-        try:
             self.log.info('Start download')
             downloaded_file_size = 0
             block_sz = 8192
@@ -142,6 +137,8 @@ class DownloaderService(threading.Thread):
                 # update url download status in database
                 self.connect_to_thread_db.update_url_status(self.new_id, self.download_status)
 
+        except sqlalchemy.exc.IntegrityError:
+            self.log.info('DBError')
         except IOError:
             self.log.info('IOError')
             status = self.FILE_ERROR
