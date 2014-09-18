@@ -19,7 +19,8 @@ engine = sqlalchemy.create_engine('sqlite:///downloads_storage.db')
 sqlalchemy_declarative.Base.metadata.bind = engine
 FILE_DIR = os.getcwd()
 
-LOG_FILE =  os.path.join(FILE_DIR, 'server/', 'fileDownloader/', 'downloader.log')
+
+LOG_FILE =  os.path.join(FILE_DIR, 'server', 'fileDownloader', 'downloader.log')
 LOG_FORMAT = '%(levelname)s:%(name)s: %(message)s (%(asctime)s; %(filename)s:%(lineno)d)'
 LOG_MAX_SIZE = 10000000
 LOG_BACKUPS = 5
@@ -31,7 +32,9 @@ LOG_LEVELS = {
     'ERROR': logging.ERROR,
     'CRITICAL': logging.CRITICAL}
 
-PID_FILE = os.path.join(FILE_DIR, 'server/','fileDownloader/', 'daemon-example.pid')
+
+PID_FILE = os.path.join(FILE_DIR, 'server','fileDownloader', 'daemon-example.pid')
+
 
 class DownloaderService(threading.Thread):
 
@@ -104,10 +107,12 @@ class DownloaderService(threading.Thread):
             downloaded_file_size = 0
             block_sz = 8192
             download_complete = False
+
             while not self.kill_received and not download_complete:
                 buffer = self.open_url.read(block_sz)
                 if not buffer:
                     break
+
                 downloaded_file_size += len(buffer)
                 self.open_file.write(buffer)
                 self.open_file.flush()
@@ -115,8 +120,10 @@ class DownloaderService(threading.Thread):
                 status['size'] = self.file_size
                 status['download_size'] = downloaded_file_size
                 self._cache = status
+
                 if downloaded_file_size == self.file_size:
                     download_complete = True
+
                 if download_complete:
                     self.log.info('Download complete')
                     self.log.info(' ')
@@ -125,6 +132,7 @@ class DownloaderService(threading.Thread):
                     self.log.info('Can not download file')
                     self.log.info(' ')
                     self.download_status = self.CAN_NOT_DOWNLOAD
+
         except IOError:
             self.log.info('IOError')
             status = self.FILE_ERROR
@@ -155,7 +163,7 @@ class WorkWithDB(object):
 
     def session_maker(self):
         DBSession = sqlalchemy.orm.sessionmaker(bind=engine)
-        session = DBSession() 
+        session = DBSession()
         return session
 
     def put_new_url_to_db(self, url):
@@ -171,6 +179,7 @@ class WorkWithDB(object):
                values(status=status_value)
         self.session.execute(stmt)
         self.session.commit()
+
 
 def get_logger():
     formatter = logging.Formatter(fmt=LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
