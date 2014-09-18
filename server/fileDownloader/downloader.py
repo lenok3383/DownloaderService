@@ -40,6 +40,7 @@ class DownloaderService(threading.Thread):
     DOWNLOAD_COMPLITE = 'download complete'
     CAN_NOT_DOWNLOAD = 'cannt download'
     FILE_ERROR = 'IOError'
+    IN_PROGRESS = 'download in progress'
     _cache = {}
 
     def __init__(self, url, destination_path):
@@ -101,8 +102,13 @@ class DownloaderService(threading.Thread):
 
     def file_download(self):
         try:
-            self.log.info('Start download')
             self.connect_to_thread_db = WorkWithDB()
+        except sqlalchemy.exc.IntegrityError:
+            self.log.info('DBError')
+            raise download_exception.DBError
+
+        try:
+            self.log.info('Start download')
             downloaded_file_size = 0
             block_sz = 8192
             download_complete = False
@@ -131,6 +137,10 @@ class DownloaderService(threading.Thread):
                     self.log.info('Can not download file')
                     self.log.info(' ')
                     self.download_status = self.CAN_NOT_DOWNLOAD
+                else:
+                    self.download_status = self.IN_PROGRESS
+                # update url download status in database
+                self.connect_to_thread_db.update_url_status(self.new_id, self.download_status)
 
         except IOError:
             self.log.info('IOError')
@@ -143,8 +153,6 @@ class DownloaderService(threading.Thread):
             print e
         finally:
             self.open_file.close()
-        # update url download status in database
-        self.connect_to_thread_db.update_url_status(self.new_id, self.download_status)
 
     @property
     def status(self):
