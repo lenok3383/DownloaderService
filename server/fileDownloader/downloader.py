@@ -96,8 +96,10 @@ class DownloaderService(threading.Thread):
             connect_to_db = WorkWithDB()
             # write new record with url into database and get record id
             new_id = connect_to_db.put_new_url_to_db(self.url)
-        except sqlalchemy.exc.IntegrityError:
+        except sqlalchemy.exc.SQLAlchemyError as e:
+            error_description = e
             self.log.info('DBError')
+            self.log.info(error_description)
             raise download_exception.DBError
         return new_id
 
@@ -136,7 +138,7 @@ class DownloaderService(threading.Thread):
             # update url download status in database
             connect_to_thread_db.update_url_status(self.new_id, self.download_status)
 
-        except sqlalchemy.exc.SQLAlchemyError:
+        except sqlalchemy.exc.SQLAlchemyError as e:
             self.log.info('DBError')
         except (IOError, urllib2.HTTPError) as e:
             self.log.info('Error with file')
