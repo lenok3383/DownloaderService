@@ -42,7 +42,6 @@ class DownloaderService(threading.Thread):
     CAN_NOT_DOWNLOAD = 'cannt download'
     FILE_ERROR = 'error with file'
     IN_PROGRESS = 'download in progress'
-    _cache = {}
 
     def __init__(self, url, destination_path):
         super(DownloaderService, self).__init__(group=None)
@@ -122,7 +121,7 @@ class DownloaderService(threading.Thread):
                 status = {}
                 status['size'] = self.file_size
                 status['download_size'] = downloaded_file_size
-                self._cache = status
+                self._status = status
 
                 if downloaded_file_size == self.file_size:
                     download_complete = True
@@ -158,8 +157,6 @@ class DownloaderService(threading.Thread):
 
     @property
     def status(self):
-        if not self._status:
-            self._status = self._cache
         return self._status
 
 
