@@ -149,7 +149,7 @@ class DownloaderService(threading.Thread):
 
     @property
     def status(self):
-        if self._status is None:
+        if not self._status:
             self._status = self._cache
         return self._status
 
