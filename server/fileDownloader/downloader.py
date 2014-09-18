@@ -17,7 +17,6 @@ FILE_DIR = os.getcwd()
 DOWNLOAD_DIR =  os.path.join(FILE_DIR, 'server', 'fileDownloader', 'downloads', 'test.txt')
 engine = sqlalchemy.create_engine('sqlite:///downloads_storage.db')
 sqlalchemy_declarative.Base.metadata.bind = engine
-FILE_DIR = os.getcwd()
 
 
 LOG_FILE =  os.path.join(FILE_DIR, 'server', 'fileDownloader', 'downloader.log')
