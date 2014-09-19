@@ -76,7 +76,7 @@ class SimpleServer(object):
         except Exception:
             self.log.info('Exception in processing request')
             import traceback
-            print traceback.format_exc()
+            self.log.info(traceback.format_exc())
 
     def performance_messages_request(self, msg):
         """
