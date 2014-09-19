@@ -99,6 +99,8 @@ class SimpleServer(object):
             self.downloader = DownloaderService(url, DOWNLOAD_DIR)
             answer = False
             self.log.info('START DOWNLOAD')
+            new_id = self.downloader.getId()
+            self.log.info(' NEW ID = %s', new_id)
             self.download_file()
         except fileDownloader.download_exception.HTTPException:
             answer = False
@@ -121,7 +123,7 @@ class SimpleServer(object):
         if not answer:
             self.message_answer = (False, 'ERROR_DESCRIPTION')
         elif answer:
-            self.message_answer = (True, " ' " )
+            self.message_answer = (True, " ' ")
 
         return self.message_answer
 
