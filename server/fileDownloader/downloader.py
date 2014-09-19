@@ -159,6 +159,9 @@ class DownloaderService(threading.Thread):
     def status(self):
         return self._status
 
+    def getId(self):
+        return self.new_id
+
 
 class WorkWithDB(object):
 
