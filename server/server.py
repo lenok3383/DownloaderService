@@ -86,12 +86,13 @@ class SimpleServer(object):
         """
         if msg['command'] == ADD_URL:
             url = msg['url']
-            self.put_url_to_download_queue(url)
+            message_answer = self.put_url_to_download_queue(url)
         elif msg['command'] == STATUS:
-            status = self.get_download_status()
+            message_answer = self.get_download_status()
         elif msg['command'] == DEL_FILE:
             url_id = msg['id']
-            self.delete_downloading_file(url_id)
+            message_answer = self.delete_downloading_file(url_id)
+        return message_answer
 
     def put_url_to_download_queue(self, url):
         message_answer = {}
