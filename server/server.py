@@ -94,6 +94,7 @@ class SimpleServer(object):
             self.delete_downloading_file(url_id)
 
     def put_url_to_download_queue(self, url):
+        message_answer = {}
         self.log.info('url: {}'.format(url))
         try:
             self.downloader = DownloaderService(url, DOWNLOAD_DIR)
@@ -121,11 +122,13 @@ class SimpleServer(object):
             answer = False
             self.log.info('Some another error')
         if not answer:
-            self.message_answer = (False, 'ERROR_DESCRIPTION')
+            message_answer['start_download'] = 'False'
+            message_answer['url_id'] = 'ERROR_DESCRIPTION'
         elif answer:
-            self.message_answer = (True, " ' ")
+            message_answer['start_download'] = 'True'
+            message_answer['url_id'] = new_id
 
-        return self.message_answer
+        return message_answer
 
     def download_file(self):
         THREADS.append(self.downloader)
