@@ -4,6 +4,7 @@ import socket
 import thread
 import logging
 from logging import handlers
+import traceback
 
 import sqlalchemy
 import sqlalchemy.orm
@@ -75,7 +76,6 @@ class SimpleServer(object):
             conn.close()
         except Exception:
             self.log.info('Exception in processing request')
-            import traceback
             self.log.info(traceback.format_exc())
 
     def performance_messages_request(self, msg):
@@ -99,7 +99,7 @@ class SimpleServer(object):
         self.log.info('url: {}'.format(url))
         try:
             self.downloader = DownloaderService(url, DOWNLOAD_DIR)
-            answer = False
+            answer = True
             self.log.info('START DOWNLOAD')
             new_id = self.downloader.getId()
             self.log.info(' NEW ID = %s', new_id)
@@ -123,10 +123,10 @@ class SimpleServer(object):
             answer = False
             self.log.info('Some another error')
         if not answer:
-            message_answer['start_download'] = 'False'
-            message_answer['url_id'] = 'ERROR_DESCRIPTION'
+            message_answer['start_download'] = False
+            message_answer['error_text'] = 'ERROR_DESCRIPTION'
         elif answer:
-            message_answer['start_download'] = 'True'
+            message_answer['start_download'] = True
             message_answer['url_id'] = new_id
 
         return message_answer
