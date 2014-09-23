@@ -14,6 +14,7 @@ import fileDownloader.download_exception
 from daemon import Daemon
 from fileDownloader.downloader import DownloaderService
 from sender.sender import receive_answer
+from sender.sender import send_msg
 
 
 engine = sqlalchemy.create_engine('sqlite:///downloads_storage.db')
@@ -73,6 +74,8 @@ class SimpleServer(object):
             self.log.info('AFTER TRY')
             self.log.info(msg)
             answer = self.performance_messages_request(msg)
+            self.log.info('Answer for client request: %s', answer)
+            send_msg(conn, answer)
             conn.close()
         except Exception:
             self.log.info('Exception in processing request')
