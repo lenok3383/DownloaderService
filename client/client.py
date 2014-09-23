@@ -43,6 +43,10 @@ class ClientSocket(object):
         self.send_add_url()
         self.log.info('Send url to server')
         url_id = self.receive_download_status()
+        if url_id:
+            id_to_del = url_id - 1
+            self.send_request_to_delete(id_to_del)
+
 
     def connect(self, host, port):
         try:
@@ -72,6 +76,12 @@ class ClientSocket(object):
             url_id = answer['url_id']
         self.log.info('Url id = %s', url_id)
         return url_id
+
+    def send_request_to_delete(self, id):
+        send_cmd = {}
+        send_cmd['command'] = DEL_FILE
+        send_cmd['id'] = id
+        send_msg(self.sock, send_cmd)
 
 
 def get_logger():
