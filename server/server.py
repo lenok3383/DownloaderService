@@ -71,7 +71,7 @@ class SimpleServer(object):
         try:
             self.log.info('TRY TO GET REQUEST')
             msg = receive_answer(conn)
-            self.log.info('AFTER TRY')
+            self.log.info('Message: %s', msg)
             self.log.info(msg)
             answer = self.performance_messages_request(msg)
             self.log.info('Answer for client request: %s', answer)
@@ -144,13 +144,15 @@ class SimpleServer(object):
         pass
 
     def delete_downloading_file(self, id_to_remove):
+        message_answer = {}
         DBSession = sqlalchemy.orm.sessionmaker(bind=engine)
         session = DBSession()
         session.query(sqlalchemy_declarative.DownStorage).filter_by(id = id_to_remove).delete()
         session.commit()
+        message_answer['id'] = id_to_remove
         # for t in THREADS:
         #     t.kill_received = True
-        return id_to_remove
+        return message_answer
 
 
 class MyDaemon(Daemon):
