@@ -87,7 +87,7 @@ class ClientSocket(object):
 
 def get_logger():
     formatter = logging.Formatter(fmt=LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-    file_handler = handlers.RoltatingFileHandler(
+    file_handler = handlers.RotatingFileHandler(
         LOG_FILE,
         maxBytes=LOG_MAX_SIZE,
         backupCount=LOG_BACKUPS)
@@ -109,10 +109,10 @@ def main():
 
     conn_to_del = ClientSocket()
     log.info('Send id to delete')
-    if url_id:
+    if url_id and url_id != 1:
         url_id -= 1
         conn_to_del.send_request_to_delete(url_id)
-    conn_to_del.receive_deleted_download_id()
+    url_id = conn_to_del.receive_deleted_download_id()
 
 
 if __name__ == '__main__':
