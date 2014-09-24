@@ -40,13 +40,6 @@ class ClientSocket(object):
         self.log = get_logger()
         self.connect = self.connect('localhost', 8888)
         self.log.info('Socket now listening')
-        self.send_add_url()
-        self.log.info('Send url to server')
-        url_id = self.receive_download_status()
-        if url_id:
-            id_to_del = url_id - 1
-            self.send_request_to_delete(id_to_del)
-
 
     def connect(self, host, port):
         try:
@@ -69,10 +62,10 @@ class ClientSocket(object):
     def receive_download_status(self):
         answer = receive_answer(self.sock)
         self.log.info('Answer with download status: %s', answer)
-        if  answer['start_download'] == False:
+        if  not answer['start_download']:
             print answer['error_text']
             url_id = 0
-        elif answer['start_download'] == True:
+        elif answer['start_download']:
             url_id = answer['url_id']
         self.log.info('Url id = %s', url_id)
         return url_id
@@ -83,10 +76,18 @@ class ClientSocket(object):
         send_cmd['id'] = id
         send_msg(self.sock, send_cmd)
 
+    def receive_deleted_download_id(self):
+        answer = receive_answer(self.sock)
+        self.log.info('Answer with deleted download id: %s', answer)
+        if answer['id']:
+            url_id = answer['id']
+        self.log.info('Deleted url id = %s', url_id)
+        return  url_id
+
 
 def get_logger():
     formatter = logging.Formatter(fmt=LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S")
-    file_handler = handlers.RotatingFileHandler(
+    file_handler = handlers.RoltatingFileHandler(
         LOG_FILE,
         maxBytes=LOG_MAX_SIZE,
         backupCount=LOG_BACKUPS)
@@ -100,7 +101,18 @@ def get_logger():
     return log
 
 def main():
-    ClientSocket()
+    conn = ClientSocket()
+    log = get_logger()
+    log.info('Send url to server')
+    conn.send_add_url()
+    url_id = conn.receive_download_status()
+
+    conn_to_del = ClientSocket()
+    log.info('Send id to delete')
+    if url_id:
+        url_id -= 1
+        conn_to_del.send_request_to_delete(url_id)
+    conn_to_del.receive_deleted_download_id()
 
 
 if __name__ == '__main__':
