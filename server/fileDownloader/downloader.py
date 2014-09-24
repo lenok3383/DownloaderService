@@ -15,7 +15,7 @@ import download_exception
 
 
 FILE_DIR = os.getcwd()
-DOWNLOAD_DIR =  os.path.join(FILE_DIR, 'server', 'fileDownloader', 'downloads', 'test.txt')
+DOWNLOAD_DIR =  os.path.join(FILE_DIR, 'server', 'fileDownloader', 'downloads')
 engine = sqlalchemy.create_engine('sqlite:///downloads_storage.db')
 sqlalchemy_declarative.Base.metadata.bind = engine
 
@@ -81,6 +81,7 @@ class DownloaderService(threading.Thread):
             self.file_name = self.url.split('/')[-1]
             self.open_file = open(os.path.join(self.destination_path,
                                                self.file_name), 'wb')
+            self.path_to_file = os.path.join(DOWNLOAD_DIR, self.file_name)
         except IOError:
             self.log.info('IOError')
             raise download_exception.CanntCreateFileError
@@ -94,7 +95,7 @@ class DownloaderService(threading.Thread):
             self.log.info('Connect to DB')
             connect_to_db = WorkWithDB()
             # write new record with url into database and get record id
-            new_id = connect_to_db.put_new_url_to_db(self.url)
+            new_id = connect_to_db.put_new_url_to_db(self.url, self.path_to_file)
         except sqlalchemy.exc.SQLAlchemyError as e:
             error_description = e
             self.log.info('DBError')
@@ -175,8 +176,8 @@ class WorkWithDB(object):
         session = DBSession()
         return session
 
-    def put_new_url_to_db(self, url):
-        new_url = sqlalchemy_declarative.DownStorage(url=url, status=self.START_DOWNLOAD)
+    def put_new_url_to_db(self, url, path):
+        new_url = sqlalchemy_declarative.DownStorage(url=url, status=self.START_DOWNLOAD, file_path = path)
         self.session.add(new_url)
         self.session.commit()
         self.session.refresh(new_url)
