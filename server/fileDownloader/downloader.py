@@ -51,8 +51,8 @@ class DownloaderService(threading.Thread):
         self.log = get_logger()
         self.kill_received = False
         self.file_size = self.get_connection_with_url()
-        self.create_file()
         self.new_id = self.add_new_record_to_db()
+        self.create_file()
 
     def run(self):
         self.file_download()
@@ -64,6 +64,8 @@ class DownloaderService(threading.Thread):
             meta = self.open_url.info()
             self.log.info('Get file size')
             file_size = int(meta.getheaders("Content-Length")[0])
+            self.log.info('Get file name')
+            self.file_name = self.url.split('/')[-1]
         except urllib2.HTTPError:
             self.log.info('HTTPError')
             raise download_exception.HTTPException
@@ -78,10 +80,10 @@ class DownloaderService(threading.Thread):
     def create_file(self):
         try:
             self.log.info('Create new file')
-            self.file_name = self.url.split('/')[-1]
+            new_file_name =  str(self.new_id)
+            self.log.info('NEW FILE NAME: %s', new_file_name)
             self.open_file = open(os.path.join(self.destination_path,
-                                               self.file_name), 'wb')
-            self.path_to_file = os.path.join(DOWNLOAD_DIR, self.file_name)
+                                               new_file_name), 'wb')
         except IOError:
             self.log.info('IOError')
             raise download_exception.CanntCreateFileError
@@ -95,7 +97,7 @@ class DownloaderService(threading.Thread):
             self.log.info('Connect to DB')
             connect_to_db = WorkWithDB()
             # write new record with url into database and get record id
-            new_id = connect_to_db.put_new_url_to_db(self.url, self.path_to_file)
+            new_id = connect_to_db.put_new_url_to_db(self.url, self.file_name)
         except sqlalchemy.exc.SQLAlchemyError as e:
             error_description = e
             self.log.info('DBError')
@@ -176,8 +178,8 @@ class WorkWithDB(object):
         session = DBSession()
         return session
 
-    def put_new_url_to_db(self, url, path):
-        new_url = sqlalchemy_declarative.DownStorage(url=url, status=self.START_DOWNLOAD, file_path = path)
+    def put_new_url_to_db(self, url, file_name):
+        new_url = sqlalchemy_declarative.DownStorage(url=url, status=self.START_DOWNLOAD, file_name = file_name)
         self.session.add(new_url)
         self.session.commit()
         self.session.refresh(new_url)
