@@ -150,6 +150,12 @@ class SimpleServer(object):
         session.query(sqlalchemy_declarative.DownStorage).filter_by(id = id_to_remove).delete()
         session.commit()
         message_answer['id'] = id_to_remove
+        path_to_file = os.path.join(DOWNLOAD_DIR, str(id_to_remove))
+        try:
+            os.remove(path_to_file)
+        except OSError, e:
+            self.log.info('OSError: %s', e)
+            self.log.info(traceback.format_exc())
         # for t in THREADS:
         #     t.kill_received = True
         return message_answer
