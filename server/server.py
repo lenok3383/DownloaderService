@@ -45,7 +45,7 @@ LOG_LEVELS = {
 ADD_URL = 'add_url'
 STATUS = 'status'
 DEL_FILE = 'delete_file'
-THREADS = []
+download_dict = {}
 
 
 class SimpleServer(object):
@@ -106,7 +106,8 @@ class SimpleServer(object):
             self.log.info('START DOWNLOAD')
             new_id = downloader.getId()
             self.log.info(' NEW ID = %s', new_id)
-            THREADS.append(downloader)
+            download_dict[new_id] = downloader
+            self.log.info(' Downloader dict = %s', download_dict)
             downloader.start()
             self.log.info('In progress')
         except fileDownloader.download_exception.HTTPException:
