@@ -101,12 +101,14 @@ class SimpleServer(object):
         message_answer = {}
         self.log.info('url: {}'.format(url))
         try:
-            self.downloader = DownloaderService(url, DOWNLOAD_DIR)
+            downloader = DownloaderService(url, DOWNLOAD_DIR)
             answer = True
             self.log.info('START DOWNLOAD')
-            new_id = self.downloader.getId()
+            new_id = downloader.getId()
             self.log.info(' NEW ID = %s', new_id)
-            self.download_file()
+            THREADS.append(downloader)
+            downloader.start()
+            self.log.info('In progress')
         except fileDownloader.download_exception.HTTPException:
             answer = False
             self.log.info('HTTP exception')
@@ -133,12 +135,6 @@ class SimpleServer(object):
             message_answer['url_id'] = new_id
 
         return message_answer
-
-    def download_file(self):
-        THREADS.append(self.downloader)
-        self.downloader.start()
-        self.log.info('In progress')
-        self.log.info('          ')
 
     def get_download_status(self):
         pass
