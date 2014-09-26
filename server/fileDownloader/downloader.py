@@ -3,6 +3,7 @@ import os
 import threading
 import logging
 from logging import handlers
+import time
 
 import sqlalchemy
 import sqlalchemy.exc
@@ -113,6 +114,10 @@ class DownloaderService(threading.Thread):
             block_sz = 8192
             download_complete = False
 
+            start_time = time.time()
+            self.log.info('START TIME: %s', start_time)
+            totalSizeInKiloBytes = self.file_size / 1024
+            self.log.info('Total Size In KiloBytes: %s', totalSizeInKiloBytes)
             while not self.kill_received and not download_complete:
                 buffer = self.open_url.read(block_sz)
                 if not buffer:
@@ -122,6 +127,10 @@ class DownloaderService(threading.Thread):
                 self.open_file.write(buffer)
                 self.open_file.flush()
                 status = {}
+                elapsed_time = time.time() - start_time
+                self.log.info('ELAPSED TIME: %s', elapsed_time)
+                status['speed'] = totalSizeInKiloBytes / elapsed_time
+                self.log.info('SPEED: %s', status['speed'])
                 status['size'] = self.file_size
                 status['download_size'] = downloaded_file_size
                 self._status = status
