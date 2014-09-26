@@ -142,9 +142,15 @@ class SimpleServer(object):
 
     def delete_downloading_file(self, id_to_remove):
         message_answer = {}
+        try:
+            download_object = download_dict[id_to_remove]
+            download_object.kill_received = Truelsl
+        except KeyError, e:
+            self.log.info('KeyError: %s', e)
+            self.log.info(traceback.format_exc())
         DBSession = sqlalchemy.orm.sessionmaker(bind=engine)
         session = DBSession()
-        session.query(sqlalchemy_declarative.DownStorage).filter_by(id = id_to_remove).delete()
+        session.query(sqlalchemy_declarative.DownStorage).filter_by(id=id_to_remove).delete()
         session.commit()
         message_answer['id'] = id_to_remove
         path_to_file = os.path.join(DOWNLOAD_DIR, str(id_to_remove))
@@ -153,8 +159,6 @@ class SimpleServer(object):
         except OSError, e:
             self.log.info('OSError: %s', e)
             self.log.info(traceback.format_exc())
-        # for t in THREADS:
-        #     t.kill_received = True
         return message_answer
 
 
