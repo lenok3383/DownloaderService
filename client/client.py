@@ -62,7 +62,7 @@ class ClientSocket(object):
     def receive_download_status(self):
         answer = receive_answer(self.sock)
         self.log.info('Answer with download status: %s', answer)
-        if  not answer['start_download']:
+        if not answer['start_download']:
             print answer['error_text']
             url_id = 0
         elif answer['start_download']:
@@ -82,7 +82,23 @@ class ClientSocket(object):
         if answer['id']:
             url_id = answer['id']
         self.log.info('Deleted url id = %s', url_id)
-        return  url_id
+        return url_id
+
+    def send_request_to_get_single_status(self, url_id):
+        send_cmd = {}
+        send_cmd['command'] = STATUS
+        send_cmd['download_id'] = url_id
+        send_msg(self.sock, send_cmd)
+
+    def send_request_to_get_status_list(self):
+        send_cmd = {}
+        send_cmd['command'] = STATUS
+        send_msg(self.sock, send_cmd)
+
+    def receive_status(self):
+        answer = receive_answer(self.sock)
+        self.log.info('Answer with downloading status: %s', answer)
+        return answer
 
 
 def get_logger():
@@ -112,7 +128,13 @@ def main():
     if url_id and url_id != 1:
         url_id -= 1
         conn_to_del.send_request_to_delete(url_id)
-    url_id = conn_to_del.receive_deleted_download_id()
+    conn_to_del.receive_deleted_download_id()
+
+    conn_to_get_status = ClientSocket()
+    log.info('Send id to get single status')
+    conn_to_get_status.send_request_to_get_single_status(url_id)
+    status = conn_to_get_status.receive_status()
+    log.info('Downloading status: %s', status)
 
 
 if __name__ == '__main__':
