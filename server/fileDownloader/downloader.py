@@ -107,6 +107,7 @@ class DownloaderService(threading.Thread):
         return new_id
 
     def file_download(self):
+        status = {}
         try:
             connect_to_thread_db = WorkWithDB()
             self.log.info('Start download')
@@ -118,6 +119,8 @@ class DownloaderService(threading.Thread):
             self.log.info('START TIME: %s', start_time)
             totalSizeInKiloBytes = self.file_size / 1024
             self.log.info('Total Size In KiloBytes: %s', totalSizeInKiloBytes)
+            status['id'] = self.new_id
+            status['url'] = self.url
             while not self.kill_received and not download_complete:
                 buffer = self.open_url.read(block_sz)
                 if not buffer:
@@ -126,7 +129,7 @@ class DownloaderService(threading.Thread):
                 downloaded_file_size += len(buffer)
                 self.open_file.write(buffer)
                 self.open_file.flush()
-                status = {}
+
                 elapsed_time = time.time() - start_time
                 self.log.info('ELAPSED TIME: %s', elapsed_time)
                 status['speed'] = totalSizeInKiloBytes / elapsed_time
