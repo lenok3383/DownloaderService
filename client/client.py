@@ -126,8 +126,8 @@ def main():
     conn_to_del = ClientSocket()
     log.info('Send id to delete')
     if url_id and url_id != 1:
-        url_id -= 1
-        conn_to_del.send_request_to_delete(url_id)
+        url_id_to_del = url_id - 1
+        conn_to_del.send_request_to_delete(url_id_to_del)
     conn_to_del.receive_deleted_download_id()
 
     conn_to_get_status = ClientSocket()
