@@ -130,9 +130,10 @@ class SimpleServer(object):
         except fileDownloader.download_exception.DBError:
             answer = False
             self.log.info('Problem with database')
-        except:
+        except Exception, e:
             answer = False
-            self.log.info('Some another error')
+            self.log.info('Some another error: %s', e)
+            self.log.info(traceback.format_exc())
         if not answer:
             message_answer['start_download'] = False
             message_answer['error_text'] = 'ERROR_DESCRIPTION'
