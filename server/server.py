@@ -142,8 +142,12 @@ class SimpleServer(object):
         return message_answer
 
     def get_download_status(self, url_id):
-        status = download_dict[url_id].status
-        self.log.info('STATUS: %s', status)
+        try:
+            status = download_dict[url_id].status
+            self.log.info('STATUS: %s', status)
+        except Exception, e:
+            self.log.info('Error in getting status: %s', e)
+            self.log.info(traceback.format_exc())
         return status
 
     def delete_downloading_file(self, id_to_remove):
