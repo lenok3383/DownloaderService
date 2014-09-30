@@ -134,7 +134,14 @@ def main():
     log.info('Send id to get single status')
     conn_to_get_status.send_request_to_get_single_status(url_id)
     status = conn_to_get_status.receive_status()
-    log.info('Downloading status: %s', status)
+    log.info('Downloading STATUS: %s', status)
+
+    conn_to_get_status = ClientSocket()
+    log.info('Send id to get all statuses')
+    conn_to_get_status.send_request_to_get_status_list()
+    status = conn_to_get_status.receive_status()
+    log.info('Downloading STATUSES : %s', status)
+
 
 
 if __name__ == '__main__':
