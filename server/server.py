@@ -91,7 +91,11 @@ class SimpleServer(object):
             url = msg['url']
             message_answer = self.put_url_to_download_queue(url)
         elif msg['command'] == STATUS:
-            message_answer = self.get_download_status()
+            if msg['download_id']:
+                url_id = msg['download_id']
+                message_answer = self.get_download_status(url_id)
+            else:
+                message_answer = self.get_status_list()
         elif msg['command'] == DEL_FILE:
             url_id = msg['id']
             message_answer = self.delete_downloading_file(url_id)
@@ -137,14 +141,16 @@ class SimpleServer(object):
 
         return message_answer
 
-    def get_download_status(self):
-        pass
+    def get_download_status(self, url_id):
+        status = download_dict[url_id].status
+        self.log.info('STATUS: %s', status)
+        return status
 
     def delete_downloading_file(self, id_to_remove):
         message_answer = {}
         try:
             download_object = download_dict[id_to_remove]
-            download_object.kill_received = Truelsl
+            download_object.kill_received = True
         except KeyError, e:
             self.log.info('KeyError: %s', e)
             self.log.info(traceback.format_exc())
