@@ -91,11 +91,12 @@ class SimpleServer(object):
             url = msg['url']
             message_answer = self.put_url_to_download_queue(url)
         elif msg['command'] == STATUS:
-            if msg['download_id']:
-                url_id = msg['download_id']
-                message_answer = self.get_download_status(url_id)
-            else:
-                message_answer = self.get_status_list()
+            for key in msg:
+                if key == 'download_id':
+                    url_id = msg['download_id']
+                else:
+                    url_id = False
+            message_answer = self.get_download_statuses(url_id)
         elif msg['command'] == DEL_FILE:
             url_id = msg['id']
             message_answer = self.delete_downloading_file(url_id)
@@ -141,9 +142,53 @@ class SimpleServer(object):
 
         return message_answer
 
-    def get_download_status(self, url_id):
+    def get_download_statuses(self, url_id):
+        """
+            statuses = {'id_1':
+                        { 'url': url_value,
+                        'speed': speed_value,
+                        'size': size_value,
+                        'download_size': download_size_value},
+                        'id_2':
+                        {'url2': url_value2,...}
+                        }
+
+            answer_for_status_request = {'statuses':
+                                        {'id_1':
+                                        { 'url': url_value,
+                                        'speed': speed_value,
+                                        'size': size_value,
+                                        'download_size': download_size_value},
+                                        'id_2':
+                                        {'url2': url_value2,...}
+                                        }
+                                        }
+        """
+
+        statuses = {}
+        answer_for_status_request = {}
+        if url_id:
+                statuses[url_id] = self.get_status(url_id)
+        else:
+            for key in download_dict:
+                status = self.get_status(key)
+                statuses[key] = status
+        answer_for_status_request['statuses'] = statuses
+        return answer_for_status_request
+
+    def get_status(self, url_id):
+        """
+            status =  { 'url': url_value,
+                        'speed': speed_value,
+                        'size': size_value,
+                        'download_size': download_size_value}
+        """
+        status = {}
         try:
-            status = download_dict[url_id].status
+            status['url'] = download_dict[url_id].url_value
+            status['speed'] = download_dict[url_id].speed
+            status['size'] = download_dict[url_id].file_size
+            status['download_size'] = download_dict[url_id].download_size
             self.log.info('STATUS: %s', status)
         except Exception, e:
             self.log.info('Error in getting status: %s', e)
