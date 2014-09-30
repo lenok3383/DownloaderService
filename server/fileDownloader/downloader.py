@@ -46,7 +46,10 @@ class DownloaderService(threading.Thread):
 
     def __init__(self, url, destination_path):
         super(DownloaderService, self).__init__(group=None)
-        self._status = None
+        self._url_value = None
+        self._speed = None
+        self._size = None
+        self._download_size = None
         self.url = url
         self.destination_path = destination_path
         self.log = get_logger()
@@ -107,7 +110,6 @@ class DownloaderService(threading.Thread):
         return new_id
 
     def file_download(self):
-        status = {}
         try:
             connect_to_thread_db = WorkWithDB()
             self.log.info('Start download')
@@ -119,8 +121,7 @@ class DownloaderService(threading.Thread):
             self.log.info('START TIME: %s', start_time)
             totalSizeInKiloBytes = self.file_size / 1024
             self.log.info('Total Size In KiloBytes: %s', totalSizeInKiloBytes)
-            status['id'] = self.new_id
-            status['url'] = self.url
+            self._url_value = self.url
             while not self.kill_received and not download_complete:
                 buffer = self.open_url.read(block_sz)
                 if not buffer:
@@ -132,11 +133,11 @@ class DownloaderService(threading.Thread):
 
                 elapsed_time = time.time() - start_time
                 self.log.info('ELAPSED TIME: %s', elapsed_time)
-                status['speed'] = totalSizeInKiloBytes / elapsed_time
-                self.log.info('SPEED: %s', status['speed'])
-                status['size'] = self.file_size
-                status['download_size'] = downloaded_file_size
-                self._status = status
+                speed = totalSizeInKiloBytes / elapsed_time
+                self._speed = speed
+                self.log.info('SPEED: %s', speed)
+                self._size = self.file_size
+                self._download_size = downloaded_file_size
 
                 if downloaded_file_size == self.file_size:
                     download_complete = True
@@ -171,8 +172,20 @@ class DownloaderService(threading.Thread):
             self.open_file.close()
 
     @property
-    def status(self):
-        return self._status
+    def url_value(self):
+        return self._url_value
+
+    @property
+    def speed(self):
+        return self._speed
+
+    @property
+    def size(self):
+        return self._size
+
+    @property
+    def download_size(self):
+        return self._download_size
 
     def getId(self):
         return self.new_id
