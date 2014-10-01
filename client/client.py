@@ -63,7 +63,6 @@ class ClientSocket(object):
         answer = receive_answer(self.sock)
         self.log.info('Answer with download status: %s', answer)
         if not answer['start_download']:
-            print answer['error_text']
             url_id = 0
         elif answer['start_download']:
             url_id = answer['url_id']
