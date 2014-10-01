@@ -118,25 +118,36 @@ class SimpleServer(object):
         except fileDownloader.download_exception.HTTPException:
             answer = False
             self.log.info('HTTP exception')
+            error_description = traceback.format_exc()
+            self.log.info(traceback.format_exc())
         except fileDownloader.download_exception.URLException:
             answer = False
             self.log.info('URL exception')
+            error_description = traceback.format_exc()
+            self.log.info(traceback.format_exc())
         except fileDownloader.download_exception.NoContentLengthException:
             answer = False
             self.log.info('Content-length exception')
+            error_description = traceback.format_exc()
+            self.log.info(traceback.format_exc())
         except fileDownloader.download_exception.CanntCreateFileError:
             answer = False
             self.log.info('Cann\'t create file error')
+            error_description = traceback.format_exc()
+            self.log.info(traceback.format_exc())
         except fileDownloader.download_exception.DBError:
             answer = False
             self.log.info('Problem with database')
+            error_description = traceback.format_exc()
+            self.log.info(traceback.format_exc())
         except Exception, e:
             answer = False
             self.log.info('Some another error: %s', e)
+            error_description = traceback.format_exc()
             self.log.info(traceback.format_exc())
         if not answer:
             message_answer['start_download'] = False
-            message_answer['error_text'] = 'ERROR_DESCRIPTION'
+            message_answer['error_text'] = error_description
         elif answer:
             message_answer['start_download'] = True
             message_answer['url_id'] = new_id
