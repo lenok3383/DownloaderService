@@ -167,7 +167,6 @@ class DownloaderService(threading.Thread):
             status = e
             self.log.info(status)
             connect_to_thread_db.update_url_status(self.new_id, status)
-            print e
         finally:
             self.open_file.close()
 
